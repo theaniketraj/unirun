@@ -1,3 +1,5 @@
+import type { UnirunConfig } from '../utils/config.js';
+
 export type RunMode = 'dev' | 'build' | 'prod';
 
 export interface DetectedCommand {
@@ -40,9 +42,16 @@ export function detectMatchingScripts(mode: RunMode, pkg: any): string[] {
   return candidates.filter(key => scripts[key]);
 }
 
-export function detectScript(mode: RunMode, pkg: any): DetectedCommand | null {
+export function detectScript(mode: RunMode, pkg: any, config?: UnirunConfig | null): DetectedCommand | null {
+  // 1. Config Override
+  if (config?.scripts?.[mode]) {
+    return { type: 'script', value: config.scripts[mode], source: '.unirunrc' };
+  }
+
+  // 2. Package.json Scripts
   const matches = detectMatchingScripts(mode, pkg);
   if (matches.length > 0) return { type: 'script', value: matches[0], source: 'package.json' };
   
+  // 3. Framework Heuristics
   return detectFrameworkCommand(mode, pkg);
 }
