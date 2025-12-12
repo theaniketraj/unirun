@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { cac } from 'cac';
 import prompts from 'prompts';
 import { readPackageJson } from './utils/parser.js';

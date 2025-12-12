@@ -10,9 +10,28 @@
     "dev": "tsup --watch",
     "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "cli",
+    "run",
+    "script",
+    "npm",
+    "yarn",
+    "pnpm",
+    "bun",
+    "task-runner",
+    "dx"
+  ],
+  "author": "Aniket Raj",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theaniketraj/unirun.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
   "dependencies": {
     "cac": "^6.7.14",
