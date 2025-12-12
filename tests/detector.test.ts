@@ -9,7 +9,7 @@ describe('detectScript', () => {
         build: 'vite build'
       }
     };
-    expect(detectScript('dev', pkg)).toBe('dev');
+    expect(detectScript('dev', pkg)).toEqual({ type: 'script', value: 'dev', source: 'package.json' });
   });
 
   it('should prioritize dev over start', () => {
@@ -19,7 +19,7 @@ describe('detectScript', () => {
         start: 'node server.js'
       }
     };
-    expect(detectScript('dev', pkg)).toBe('dev');
+    expect(detectScript('dev', pkg)).toEqual({ type: 'script', value: 'dev', source: 'package.json' });
   });
 
   it('should detect build script', () => {
@@ -28,6 +28,16 @@ describe('detectScript', () => {
         compile: 'tsc'
       }
     };
-    expect(detectScript('build', pkg)).toBe('compile');
+    expect(detectScript('build', pkg)).toEqual({ type: 'script', value: 'compile', source: 'package.json' });
+  });
+
+  it('should detect framework if scripts are missing', () => {
+    const pkg = {
+      scripts: {},
+      dependencies: {
+        next: '13.0.0'
+      }
+    };
+    expect(detectScript('dev', pkg)).toEqual({ type: 'command', value: 'next dev', source: 'next' });
   });
 });
