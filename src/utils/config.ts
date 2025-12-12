@@ -18,7 +18,7 @@ export function readConfig(): UnirunConfig | null {
       try {
         return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
       } catch (error) {
-        console.warn(`Warning: Failed to parse ${file}`);
+        console.warn(`Warning: Failed to parse ${file}`, error);
         return null;
       }
     }
