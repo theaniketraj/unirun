@@ -6,6 +6,7 @@ import { detectScript, detectMatchingScripts, detectFrameworkCommand, type Detec
 import { execute } from './core/executor.js';
 import { detectManager } from './core/manager.js';
 import { detectMonorepo } from './core/monorepo.js';
+import { runPipeline } from './pipeline/index.js';
 import chalk from 'chalk';
 
 const cli = cac('unirun');
@@ -21,6 +22,14 @@ cli
       const config = readConfig();
       const manager = await detectManager();
       const monorepo = detectMonorepo();
+
+      // Run pre-flight checks (dependencies, env, port conflicts)
+      const pipelineResult = await runPipeline({ manager, pkg });
+      
+      if (!pipelineResult.shouldContinue) {
+        console.log(chalk.red('Aborting due to pre-flight check failures.'));
+        process.exit(1);
+      }
 
       // Extract extra args (exclude known options)
       const knownOptions = new Set(['build', 'prod', '--']);
@@ -40,7 +49,7 @@ cli
       if (options.build) {
         const buildCmd = detectScript('build', pkg, config);
         if (buildCmd) {
-          console.log(chalk.blue(`⚙️  Building with ${manager}...`));
+          console.log(chalk.blue(`Building with ${manager}...`));
           await execute(manager, buildCmd.value, buildCmd.type === 'script');
         }
       }
@@ -65,7 +74,7 @@ cli
              const matches = detectMatchingScripts(mode, pkg);
              const scriptName = matches[0] || (mode === 'prod' ? 'start' : 'dev');
              
-             console.log(chalk.magenta(`✨ Monorepo detected (${monorepo}). Delegating...`));
+             console.log(chalk.magenta(`Monorepo detected (${monorepo}). Delegating...`));
              await execute(manager, `${tool} run ${scriptName}`, false, extraArgs);
              return;
           }
@@ -96,12 +105,18 @@ cli
       }
 
       if (!target) {
-        console.log(chalk.red('❌ No suitable script found automatically.'));
+        console.log(chalk.red('No suitable script found automatically.'));
         process.exit(1);
       }
 
-      console.log(chalk.green(`🚀 Launching ${target.value}...`));
-      await execute(manager, target.value, target.type === 'script', extraArgs);
+      // Apply port modification if pipeline detected conflict
+      let finalArgs = extraArgs;
+      if (pipelineResult.modifiedPort) {
+        finalArgs = [`--port ${pipelineResult.modifiedPort}`, ...extraArgs];
+      }
+
+      console.log(chalk.green(`Launching ${target.value}...`));
+      await execute(manager, target.value, target.type === 'script', finalArgs);
 
     } catch (error) {
       console.error(error);
